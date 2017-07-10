@@ -17,14 +17,12 @@ var dataPane = $("#data-pane");
 dataPane.css("width", dataPaneWidth + "px");
 
 
-function reloadGraph () {
-  var prefix = $("#prefix").val(), suffix = $("#suffix").val();
+// Given new set of data, redraws the entire graph
+function reloadGraph (data, prefix, suffix) {
   function formatter(n) { return prefix + Math.round(n) + suffix; }
 
-  var data = $("#data")[0].value.trim();
   data = Papa.parse(data, { header: true, skipEmptyLines: true, delimiter: "," }).data;
   data.forEach(function(d) { d.value = parseFloat(d.value); });
-
 
   // Transform data (i.e., finding cumulative values and total) for easier charting
   var cumulative = 0, maxValue = 0, minValue = 0;
@@ -122,14 +120,50 @@ function reloadGraph () {
       .attr("y2", function(d) { return y(d.end) } )
 }
 
+
+// URL-safe encoding / decoding functions
+function encode (s) {
+  return btoa(s).replace(/=/g,"!");
+}
+function decode (s) {
+  return atob(s.replace(/!/g,"="));
+}
+
+
+// When new data is entered, redraw the graph and push it to the url
+// If init is true, don't push new state to history
+function newData (init) {
+  var prefix = $("#prefix").val(), suffix = $("#suffix").val();
+  var data = $("#data")[0].value.trim();
+  reloadGraph(data, prefix, suffix);
+
+  if (!init) {
+    var qs = "?prefix=" + encode(prefix) + "&suffix=" + encode(suffix) + "&data=" + encode(data);
+    history.pushState({}, "Graph", qs);
+  }
+}
+
+
 // Init
-reloadGraph();
+var _initialData = window.location.search, initialData = {};
+if (_initialData && _initialData.length > 0) {
+  _initialData = _initialData.substring(1).split("&");
+  _initialData.forEach(function (d) {
+    d = d.split("=");
+    initialData[d[0]] = decode(d[1]);
+  });
+  console.log(initialData);
+  $("#prefix").val(initialData.prefix);
+  $("#suffix").val(initialData.suffix);
+  $("#data")[0].value = initialData.data;
+}
+newData(true);
 
 
 // Reload graph when data changes
-$("#prefix").on("keyup", reloadGraph);
-$("#suffix").on("keyup", reloadGraph);
-$("#data").on("keyup", reloadGraph);
+$("#prefix").on("keyup", function () { newData(); });
+$("#suffix").on("keyup", function () { newData(); });
+$("#data").on("keyup", function () { newData(); });
 
 
 
