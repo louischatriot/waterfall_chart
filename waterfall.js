@@ -21,7 +21,7 @@ dataPane.css("width", dataPaneWidth + "px");
 function reloadGraph (data, prefix, suffix) {
   function formatter(n) { return prefix + Math.round(n) + suffix; }
 
-  data = Papa.parse(data, { header: true, skipEmptyLines: true, delimiter: "," }).data;
+  data = Papa.parse(data, { header: true, skipEmptyLines: true, delimiter: ",", comments: "#" }).data;
   data.forEach(function(d) { d.value = parseFloat(d.value); });
 
   // Transform data (i.e., finding cumulative values and total) for easier charting
@@ -146,9 +146,18 @@ function newData (init) {
 
 // Fill the graph with given data or dummy default data
 function resetGraph (d) {
-  var prefix = "€ ", suffix = "K", data = "name,value,type";
+  var prefix = "€ ", suffix = "K", data = "";
   d = d || {};
 
+  data += "# Lines beginning with # are comments and not processed";
+  data += "\n# Parameters:";
+  data += "\n# name: name of the series appearing under the x axis";
+  data += "\n# value: for total bars no need put anything value is calculated automatically";
+  data += "\n# type: blank for differential bars, 'total' to include a total bar";
+
+  data += "\n";
+
+  data += "\n" + "name,value,type"
   data += "\n" + "Price,120,total";
   data += "\n" + "COGS,-30,";
   data += "\n" + "Shipping,-12,";
@@ -161,6 +170,12 @@ function resetGraph (d) {
   $("#prefix").val(d.prefix === undefined ? prefix : d.prefix);
   $("#suffix").val(d.suffix === undefined ? suffix : d.suffix);
   $("#data")[0].value = d.data || data;
+}
+
+
+// Capture graph as image
+function capture () {
+  console.log("====================");
 }
 
 
@@ -191,5 +206,6 @@ $("#reset").on("click", function () {
   history.replaceState({}, "Graph", window.location.pathname);
 });
 
+$("#capture").on("click", capture);
 
 

@@ -50,6 +50,9 @@ div {
   height: 500px;
   font-family: monospace;
   font-size: 12px;
+  white-space: pre;
+  overflow-wrap: normal;
+  overflow-x: scroll;
 }
 
 
